@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation'; // Keep for potential future redirects or link navigation
+//import { useRouter } from 'next/navigation'; // Keep for potential future redirects or link navigation
 import { supabaseBrowser } from '@/lib/supabase/browser';
 import {
   Card, CardContent, CardHeader, CardTitle,
@@ -12,7 +12,7 @@ import { Label } from '@/components/ui/label';
 
 export default function SignUpPage() {
   const supabase = supabaseBrowser();
-  const router = useRouter(); // Kept for router.push if needed for other links, or future changes
+  //const router = useRouter(); // Kept for router.push if needed for other links, or future changes
   const [form, setForm] = useState({ email: '', password: '' });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);

@@ -4,7 +4,7 @@ import { NextResponse, type NextRequest } from 'next/server';
 import type { Database } from './types'; // Adjust path if your ./types.ts is elsewhere
 
 export async function updateSession(request: NextRequest) {
-  let response = NextResponse.next({
+  const response = NextResponse.next({
     request: {
       headers: request.headers,
     },

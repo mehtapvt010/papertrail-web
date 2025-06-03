@@ -4,27 +4,88 @@ export type Json =
   | boolean
   | null
   | { [key: string]: Json | undefined }
-  | Json[]
+  | Json[];
 
 export type Database = {
   public: {
     Tables: {
-      // your_table_name: {
-      //   Row: {}; // The data expected to be returned from a "select" statement.
-      //   Insert: {}; // The data expected passed to an "insert" statement.
-      //   Update: {}; // The data expected passed to an "update" statement.
-      // };
+      users: {
+        Row: {
+          id: string; // uuid
+          email: string;
+          created_at: string | null; // timestamp with time zone
+        };
+        Insert: {
+          id: string; // must match auth.users uuid
+          email: string;
+          created_at?: string | null;
+        };
+        Update: {
+          id?: string;
+          email?: string;
+          created_at?: string | null;
+        };
+      };
+
+      documents: {
+        Row: {
+          id: string;
+          user_id: string;
+          file_name: string;
+          mime_type: string;
+          storage_path: string;
+          uploaded_at: string | null;
+          vector_embedding: number[] | null; // pgvector
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          file_name: string;
+          mime_type: string;
+          storage_path: string;
+          uploaded_at?: string | null;
+          vector_embedding?: number[] | null;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          file_name?: string;
+          mime_type?: string;
+          storage_path?: string;
+          uploaded_at?: string | null;
+          vector_embedding?: number[] | null;
+        };
+      };
+
+      doc_fields: {
+        Row: {
+          id: string;
+          document_id: string;
+          field_name: string | null;
+          field_value: string | null;
+          confidence: number | null;
+          created_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          document_id: string;
+          field_name?: string | null;
+          field_value?: string | null;
+          confidence?: number | null;
+          created_at?: string | null;
+        };
+        Update: {
+          id?: string;
+          document_id?: string;
+          field_name?: string | null;
+          field_value?: string | null;
+          confidence?: number | null;
+          created_at?: string | null;
+        };
+      };
     };
-    Views: {
-      // your_view_name: {
-      //   Row: {}; // The data expected to be returned from a "select" statement.
-      // };
-    };
-    Functions: {
-      // your_function_name: {
-      //   Args: {}; // The arguments passed to the function.
-      //   Returns: {}; // The data expected to be returned from the function.
-      // };
-    };
+
+    Views: Record<string, never>; // No views yet
+    Functions: Record<string, never>; // No functions yet
   };
 };
