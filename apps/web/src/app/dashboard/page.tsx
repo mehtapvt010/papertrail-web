@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import { Button } from '@/components/ui/button';
+import UploadModal from '@/components/upload/upload-modal';
 
 export const dynamic = 'force-dynamic'; // force per-request cookies
 
@@ -56,9 +57,8 @@ export default async function DashboardPage() {
       <section className="text-center">
         <h2 className="text-2xl font-semibold mb-4">Quick Actions</h2>
         <div className="flex flex-col sm:flex-row justify-center gap-4">
-          <Button size="lg" asChild>
-            <a href="/capture">📷 Upload New Document</a>
-          </Button>
+          {/* Upload Modal Button */}
+          <UploadModal />
           <Button size="lg" variant="outline" asChild>
             <a href="/library">📂 View My Vault</a>
           </Button>
