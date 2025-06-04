@@ -21,7 +21,7 @@ export async function processAndUpload(
   userId: string,
   onProgress?: (p: UploadProgress) => void
 ) {
-  const user=await supabaseBrowser().auth.getUser();
+  //const user=await supabaseBrowser().auth.getUser();
   const supabase = supabaseBrowser();
   const bucket = supabase.storage.from('documents');
 

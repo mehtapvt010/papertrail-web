@@ -3,7 +3,7 @@
  * Each user gets a deterministic key derived from their Supabase user.id hash.
  */
 const enc = new TextEncoder();
-const dec = new TextDecoder();
+//const dec = new TextDecoder();
 
 /** Derive a CryptoKey from the user's UUID (cheap PBKDF2 stand-in for MVP). */
 export async function getUserKey(userId: string): Promise<CryptoKey> {
