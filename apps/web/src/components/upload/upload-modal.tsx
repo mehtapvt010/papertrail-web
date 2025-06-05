@@ -55,6 +55,7 @@ export default function UploadModal() {
                      -translate-y-1/2 rounded-2xl bg-white p-6 shadow-xl
                      dark:bg-zinc-900"
         >
+          
           <Dialog.Title className="text-lg font-semibold">
             Add a new document
           </Dialog.Title>

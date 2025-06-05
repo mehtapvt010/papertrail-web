@@ -15,5 +15,5 @@ export const supabaseBrowser = () => {
     throw new Error("Supabase URL and Anon Key are required.");
   }
 
-  return createBrowserClient<Database>(supabaseUrl, supabaseKey);
+  return createBrowserClient<Database>(supabaseUrl!, supabaseKey!);
 }
