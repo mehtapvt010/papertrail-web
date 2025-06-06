@@ -6,12 +6,13 @@ const supabase = createClient(
   Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
 );
 
-// Detect environment: use localhost if not on Vercel
-const apiBase =
-  Deno.env.get('VERCEL_URL')?.startsWith('http')
-    ? Deno.env.get('VERCEL_URL')
-    : `https://${Deno.env.get('VERCEL_URL')}` ??
-      'http://localhost:3000';
+// Determine base URL for calling /api/embed
+const vercelUrl = Deno.env.get('VERCEL_URL');
+const apiBase = vercelUrl
+  ? vercelUrl.startsWith('https')
+    ? vercelUrl
+    : `https://${vercelUrl}`
+  : 'http://localhost:3000';
 
 Deno.serve(async (req) => {
   try {
@@ -19,7 +20,6 @@ Deno.serve(async (req) => {
     console.log("➡️ Received body:", JSON.stringify(body));
 
     const { record } = body;
-
     if (!record?.id) {
       console.error("❌ No 'record.id' found in webhook payload");
       return new Response("Missing 'record.id'", { status: 400 });
@@ -27,6 +27,7 @@ Deno.serve(async (req) => {
 
     const docId = record.id;
     console.log("📄 Document ID:", docId);
+    console.log("🌍 Calling embed endpoint at:", `${apiBase}/api/embed`);
 
     const embedRes = await fetch(`${apiBase}/api/embed`, {
       method: 'POST',
