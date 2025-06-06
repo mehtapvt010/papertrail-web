@@ -40,6 +40,7 @@ export type Database = {
           title: string | null;
           expiry_date: string | null; // ISO 8601 format date string
           classify_confidence: number | null;
+          is_indexed: boolean | null; // ✅ new field
         };
         Insert: {
           id?: string;
@@ -53,6 +54,7 @@ export type Database = {
           title?: string | null;
           expiry_date?: string | null;
           classify_confidence?: number | null;
+          is_indexed?: boolean | null; // ✅ new field
         };
         Update: {
           id?: string;
@@ -66,6 +68,7 @@ export type Database = {
           title?: string | null;
           expiry_date?: string | null;
           classify_confidence?: number | null;
+          is_indexed?: boolean | null; // ✅ new field
         };
       };
 

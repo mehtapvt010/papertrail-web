@@ -16,6 +16,7 @@ type Props = {
     title: string | null;
     classify_confidence: number | null;
     expiry_date: string | null;
+    is_indexed: boolean | null; // ✅ added
   };
   refresh: () => void;
   ocrPromise?: Promise<number>; // resolves with latency
@@ -47,7 +48,16 @@ export default function DocumentCard({ doc, refresh, ocrPromise }: Props) {
           )}
 
           <CardContent className="p-0 space-y-1">
-            <p className="font-medium">{doc.title ?? doc.file_name}</p>
+            <p className="font-medium flex items-center gap-2">
+              {doc.title ?? doc.file_name}
+
+              {doc.is_indexed && (
+                <Badge variant="success" className="text-xs">
+                  Indexed ✓
+                </Badge>
+              )}
+            </p>
+
             <p className="text-sm text-muted-foreground">
               {new Date(doc.uploaded_at).toLocaleString()}
             </p>
