@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import UploadModal from '@/components/upload/upload-modal';
+import DocumentCard from '@/components/document/document-card';
 
 export const dynamic = 'force-dynamic'; // force per-request cookies
 
@@ -13,6 +14,16 @@ export default async function DashboardPage() {
 
   if (!user) {
     redirect('/sign-in');
+  }
+
+  const { data: documents, error } = await supabase
+    .from('documents')
+    .select('*')
+    .order('uploaded_at', { ascending: false })
+    .eq('user_id', user.id);
+
+  if (error) {
+    console.error('Error fetching documents:', error.message);
   }
 
   return (
@@ -32,15 +43,15 @@ export default async function DashboardPage() {
         {[
           {
             label: 'Documents Uploaded',
-            value: '23',
+            value: documents?.length ?? '0',
           },
           {
             label: 'Fields Extracted',
-            value: '172',
+            value: '—', // to be implemented
           },
           {
             label: 'Storage Used',
-            value: '8.4 MB',
+            value: '—', // to be implemented
           },
         ].map((stat, i) => (
           <div
@@ -53,11 +64,10 @@ export default async function DashboardPage() {
         ))}
       </section>
 
-      {/* Actions Section */}
-      <section className="text-center">
+      {/* Upload & Library */}
+      <section className="text-center mb-12">
         <h2 className="text-2xl font-semibold mb-4">Quick Actions</h2>
         <div className="flex flex-col sm:flex-row justify-center gap-4">
-          {/* Upload Modal Button */}
           <UploadModal />
           <Button size="lg" variant="outline" asChild>
             <a href="/library">📂 View My Vault</a>
@@ -65,7 +75,27 @@ export default async function DashboardPage() {
         </div>
       </section>
 
-      {/* Footer CTA */}
+      {/* Document List */}
+      <section className="max-w-4xl mx-auto space-y-4">
+        {documents && documents.length > 0 ? (
+          documents.map((doc) => (
+            <DocumentCard
+              key={doc.id}
+              doc={doc}
+              refresh={async () => {
+                'use server';
+                redirect('/dashboard'); // SSR refresh
+              }}
+            />
+          ))
+        ) : (
+          <p className="text-center text-muted-foreground">
+            No documents uploaded yet.
+          </p>
+        )}
+      </section>
+
+      {/* Footer */}
       <footer className="text-center mt-16 text-sm text-muted-foreground">
         Encrypted. Searchable. Yours.
       </footer>

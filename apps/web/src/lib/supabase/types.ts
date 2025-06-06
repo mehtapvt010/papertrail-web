@@ -36,6 +36,10 @@ export type Database = {
           storage_path: string;
           uploaded_at: string | null;
           vector_embedding: number[] | null; // pgvector
+          type_enum: string | null;
+          title: string | null;
+          expiry_date: string | null; // ISO 8601 format date string
+          classify_confidence: number | null;
         };
         Insert: {
           id?: string;
@@ -45,6 +49,10 @@ export type Database = {
           storage_path: string;
           uploaded_at?: string | null;
           vector_embedding?: number[] | null;
+          type_enum?: string | null;
+          title?: string | null;
+          expiry_date?: string | null;
+          classify_confidence?: number | null;
         };
         Update: {
           id?: string;
@@ -54,6 +62,10 @@ export type Database = {
           storage_path?: string;
           uploaded_at?: string | null;
           vector_embedding?: number[] | null;
+          type_enum?: string | null;
+          title?: string | null;
+          expiry_date?: string | null;
+          classify_confidence?: number | null;
         };
       };
 
@@ -85,7 +97,7 @@ export type Database = {
       };
     };
 
-    Views: Record<string, never>; // No views yet
-    Functions: Record<string, never>; // No functions yet
+    Views: Record<string, never>;
+    Functions: Record<string, never>;
   };
 };
