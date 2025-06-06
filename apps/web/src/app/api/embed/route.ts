@@ -1,13 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { pipeline } from '@huggingface/transformers';
+import { mkdirSync } from 'fs';
+import { tmpdir } from 'os';
 
 // Disable caching – always run server-side
 export const dynamic = 'force-dynamic';
 
 type Body = { docId: string };
 
-// 1) Security helper — only allow calls that present the service-role secret
+// Ensure model cache dir exists
+const tmp = tmpdir() + '/.cache';
+mkdirSync(tmp, { recursive: true });
+process.env.TRANSFORMERS_CACHE = tmp;
+
+// Security: only allow internal calls
 function assertAuthorized(req: NextRequest) {
   const header = req.headers.get('x-service-role-secret');
   if (header !== process.env.SUPABASE_SERVICE_ROLE_KEY) {
@@ -24,7 +31,6 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'docId required' }, { status: 400 });
     }
 
-    // 2) Load raw OCR text from Supabase
     const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -40,36 +46,35 @@ export async function POST(req: NextRequest) {
     if (error || !ocrRows?.[0]) {
       return NextResponse.json({ error: 'OCR not found' }, { status: 404 });
     }
-    const rawText: string = ocrRows[0].field_value;
 
-    // 3) Chunk ≤1000-char windows
+    const rawText: string = ocrRows[0].field_value;
     const chunks = rawText.match(/[\s\S]{1,1000}/g) ?? [];
 
-    // 4) Lazy-load the BGE model once per cold start
-    //    WASM is cached in /tmp after first download.
     const extractor =
       (globalThis as any).__bge_extractor ??
       ((globalThis as any).__bge_extractor = await pipeline(
         'feature-extraction',
-        'Xenova/bge-base-en-v1.5' // auto-downloads ONNX weights
+        'Xenova/bge-base-en-v1.5',
+        {
+          revision: 'main',
+          //token: process.env.HF_TOKEN, // Optional but recommended
+        }
       ));
 
-    // 5) Build Qdrant payload
     const vectors: { id: string; vector: number[]; payload: object }[] = [];
 
     for (let i = 0; i < chunks.length; i++) {
-      const emb = await extractor(
-        chunks[i],
-        { pooling: 'mean', normalize: true } // recommended opts :contentReference[oaicite:1]{index=1}
-      );
+      const emb = await extractor(chunks[i], {
+        pooling: 'mean',
+        normalize: true,
+      });
       vectors.push({
-        id: `${docId}_${i}`, // docId_pageChunk
+        id: `${docId}_${i}`,
         vector: Array.from(emb.data as Float32Array),
         payload: { docId, chunk_index: i },
       });
     }
 
-    // 6) Upsert to Qdrant
     const res = await fetch(
       `${process.env.NEXT_PUBLIC_QDRANT_URL}/collections/documents_embeddings/points?wait=true`,
       {
@@ -77,6 +82,7 @@ export async function POST(req: NextRequest) {
         headers: {
           'Content-Type': 'application/json',
           'api-key': process.env.NEXT_PUBLIC_QDRANT_API_KEY!,
+          'User-Agent': 'papertrail-web/1.0',
         },
         body: JSON.stringify({ points: vectors }),
       }
@@ -88,7 +94,6 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: err }, { status: 500 });
     }
 
-    // 7) Mark document as indexed
     await supabase
       .from('documents')
       .update({ is_indexed: true })
