@@ -43,12 +43,18 @@ export default function EmbedClient({ docId, refresh }: Props) {
       const rawText = data.field_value;
       const chunks = rawText.match(/[\s\S]{1,1000}/g) ?? [];
 
-      // 2. Lazy-load BGE model
+      // 2. Load BGE model dynamically from Hugging Face CDN
       const extractor =
         (globalThis as any).__bge_extractor ??
         ((globalThis as any).__bge_extractor = await pipeline(
           'feature-extraction',
-          'Xenova/bge-base-en-v1.5'
+          'Xenova/bge-base-en-v1.5',
+          {
+            // This ensures it works in browser with dynamic fetch
+            revision: 'main',
+            quantized: true,
+            //progress_callback: (status: string) => console.log('[Model]', status),
+          }
         ));
 
       // 3. Embed chunks
@@ -60,24 +66,18 @@ export default function EmbedClient({ docId, refresh }: Props) {
         });
 
         vectors.push({
-          id: `${docId}_${i}`,
+          id: crypto.randomUUID(), // MUST be a valid UUID (NOT custom strings like `${docId}_${i}`)
           vector: Array.from(output.data as Float32Array),
           payload: { docId, chunk_index: i },
         });
       }
 
-      // 4. Upload to Qdrant
-      const qdrantRes = await fetch(
-        `${process.env.NEXT_PUBLIC_QDRANT_URL}/collections/documents_embeddings/points?wait=true`,
-        {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-            'api-key': process.env.NEXT_PUBLIC_QDRANT_API_KEY!,
-          },
-          body: JSON.stringify({ points: vectors }),
-        }
-      );
+      // 4. Upload to Qdrant (via your /api/embed proxy to avoid CORS issues)
+      const qdrantRes = await fetch('/api/embed', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ points: vectors }),
+      });
 
       if (!qdrantRes.ok) {
         const err = await qdrantRes.text();

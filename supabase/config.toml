@@ -1,4 +1,0 @@
-[functions.queue-embed]
-verify_jwt = false
-import_map = "./functions/queue-embed/deno.json"
-entrypoint = "./functions/queue-embed/index.ts"
