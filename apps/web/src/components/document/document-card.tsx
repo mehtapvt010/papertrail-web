@@ -5,7 +5,13 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { LoaderCircle, CheckCircle2 } from 'lucide-react';
+import dynamic from 'next/dynamic';
 import EditDetailsDrawer from './edit-details-drawer';
+
+// Lazy-load the EmbedClient only on the client
+const EmbedClient = dynamic(() => import('@/components/embed/EmbedClient'), {
+  ssr: false,
+});
 
 type Props = {
   doc: {
@@ -16,7 +22,7 @@ type Props = {
     title: string | null;
     classify_confidence: number | null;
     expiry_date: string | null;
-    is_indexed: boolean | null; // ✅ added
+    is_indexed: boolean | null;
   };
   refresh: () => void;
   ocrPromise?: Promise<number>; // resolves with latency
@@ -78,6 +84,13 @@ export default function DocumentCard({ doc, refresh, ocrPromise }: Props) {
               <p className="text-xs text-muted-foreground">
                 OCR finished in {latency} ms
               </p>
+            )}
+
+            {/* 👇 Only show if not indexed */}
+            {!doc.is_indexed && (
+              <div className="mt-2">
+                <EmbedClient docId={doc.id} refresh={refresh} />
+              </div>
             )}
           </CardContent>
         </div>
