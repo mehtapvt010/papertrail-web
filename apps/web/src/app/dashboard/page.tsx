@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import UploadModal from '@/components/upload/upload-modal';
 import DocumentCard from '@/components/document/document-card';
 import ChatClient from '@/components/chat/chat-client';
+import DocumentList from '@/components/document/document-list';
 
 export const dynamic = 'force-dynamic'; // force per-request cookies
 

@@ -4,6 +4,7 @@ import type { Metadata } from 'next';
 import { ReactNode } from 'react';
 import { Navbar } from '../components/navbar';
 import { SupabaseProvider } from '../components/supabase-provider';
+import ThemeProvider from '../components/theme-provider'; // ✅ step 3
 
 export const metadata: Metadata = {
   title: 'PaperTrail AI',
@@ -14,7 +15,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        {/* ✅ Use hosted Plausible script instead of missing local file */}
+        {/* ✅ Hosted Plausible analytics */}
         <script
           defer
           data-domain="papertrail.local"
@@ -22,10 +23,12 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         />
       </head>
       <body className="min-h-screen bg-background">
-        <SupabaseProvider>
-          <Navbar />
-          <main className="min-h-[calc(100vh-56px)]">{children}</main>
-        </SupabaseProvider>
+        <ThemeProvider>
+          <SupabaseProvider>
+            <Navbar />
+            <main className="min-h-[calc(100vh-56px)]">{children}</main>
+          </SupabaseProvider>
+        </ThemeProvider>
       </body>
     </html>
   );
