@@ -1,14 +1,24 @@
 'use client';
+
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useSessionContext } from '@supabase/auth-helpers-react';
 import { Button } from './ui/button';
 import { supabaseBrowser } from '@/lib/supabase/browser';
+import { useTheme } from 'next-themes';
+import { useEffect, useState } from 'react';
+import { LuSun as Sun, LuMoon as Moon } from 'react-icons/lu';
 
 export function Navbar() {
   const { session, isLoading } = useSessionContext();
   const supabase = supabaseBrowser();
   const router = useRouter();
+
+  const { theme, systemTheme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+
+  const currentTheme = theme === 'system' ? systemTheme : theme;
 
   const logout = async () => {
     await supabase.auth.signOut();
@@ -22,7 +32,22 @@ export function Navbar() {
       </Link>
 
       {!isLoading && (
-        <div className="space-x-2">
+        <div className="flex items-center gap-3">
+          {mounted && (
+            <Button
+              size="icon"
+              variant="ghost"
+              aria-label="Toggle dark mode"
+              onClick={() => setTheme(currentTheme === 'dark' ? 'light' : 'dark')}
+            >
+              {currentTheme === 'dark' ? (
+                <Sun className="h-5 w-5" />
+              ) : (
+                <Moon className="h-5 w-5" />
+              )}
+            </Button>
+          )}
+
           {session ? (
             <>
               <Link href="/dashboard" className="text-sm">

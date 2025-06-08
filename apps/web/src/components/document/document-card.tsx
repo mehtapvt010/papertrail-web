@@ -7,8 +7,8 @@ import { Button } from '@/components/ui/button';
 import { LoaderCircle, CheckCircle2 } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import EditDetailsDrawer from './edit-details-drawer';
+import Image from 'next/image';
 
-// Lazy-load the EmbedClient only on the client
 const EmbedClient = dynamic(() => import('@/components/embed/EmbedClient'), {
   ssr: false,
 });
@@ -17,15 +17,16 @@ type Props = {
   doc: {
     id: string;
     file_name: string;
-    uploaded_at: string;
+    uploaded_at: string | null;
     type_enum: string | null;
     title: string | null;
     classify_confidence: number | null;
     expiry_date: string | null;
     is_indexed: boolean | null;
+    thumbnail_url?: string | null; // optional field for preview
   };
   refresh: () => void;
-  ocrPromise?: Promise<number>; // resolves with latency
+  ocrPromise?: Promise<number>;
 };
 
 export default function DocumentCard({ doc, refresh, ocrPromise }: Props) {
@@ -45,38 +46,69 @@ export default function DocumentCard({ doc, refresh, ocrPromise }: Props) {
 
   return (
     <>
-      <Card className="flex items-start justify-between gap-3 p-4 shadow-sm border">
-        <div className="flex gap-3">
-          {status === 'pending' ? (
-            <LoaderCircle className="animate-spin text-muted-foreground mt-1" />
-          ) : (
-            <CheckCircle2 className="text-green-600 mt-1" />
-          )}
+      <Card className="flex items-start justify-between gap-4 p-4 shadow-sm border bg-background transition-colors">
+        <div className="flex gap-3 w-full">
+          {/* Status icon */}
+          <div className="flex-shrink-0 pt-1">
+            {status === 'pending' ? (
+              <LoaderCircle className="animate-spin text-muted-foreground" />
+            ) : (
+              <CheckCircle2 className="text-green-600" />
+            )}
+          </div>
 
-          <CardContent className="p-0 space-y-1">
-            <p className="font-medium flex items-center gap-2">
-              {doc.title ?? doc.file_name}
+          <CardContent className="p-0 space-y-2 w-full">
+            {/* Lazy Thumbnail */}
+            {doc.thumbnail_url && (
+              <Image
+                src={doc.thumbnail_url}
+                alt={doc.title ?? 'Document preview'}
+                width={400}
+                height={150}
+                className="h-28 w-full rounded-md object-cover"
+                loading="lazy"
+              />
+            )}
 
-              {doc.is_indexed && (
-                <Badge variant="success" className="text-xs">
-                  Indexed ✓
-                </Badge>
-              )}
-            </p>
+            {/* Title & Edit button */}
+            <div className="flex items-center justify-between">
+              <p className="font-medium text-sm line-clamp-1 flex gap-2 items-center">
+                {doc.title ?? doc.file_name}
+                {doc.is_indexed && (
+                  <Badge variant="success" className="text-xs">
+                    Indexed ✓
+                  </Badge>
+                )}
+              </p>
+              <Button
+                variant="ghost"
+                className="text-xs px-2 py-0 h-auto underline underline-offset-2"
+                onClick={() => setEditOpen(true)}
+              >
+                Edit
+              </Button>
+            </div>
 
-            <p className="text-sm text-muted-foreground">
-              {new Date(doc.uploaded_at).toLocaleString()}
+            {/* Meta details */}
+            <p className="text-xs text-muted-foreground">
+              Uploaded:{' '}
+              {doc.uploaded_at
+                ? new Date(doc.uploaded_at).toLocaleString()
+                : 'Unknown'}
             </p>
 
             {doc.type_enum && (
-              <Badge variant="outline" className="text-xs mt-1 capitalize">
+              <Badge
+                variant="outline"
+                className="text-xs mt-1 capitalize"
+              >
                 {doc.type_enum}
               </Badge>
             )}
 
             {doc.classify_confidence !== null && (
               <p className="text-xs text-muted-foreground">
-                Classification confidence: {doc.classify_confidence}%
+                Confidence: {doc.classify_confidence}%
               </p>
             )}
 
@@ -86,22 +118,14 @@ export default function DocumentCard({ doc, refresh, ocrPromise }: Props) {
               </p>
             )}
 
-            {/* 👇 Only show if not indexed */}
+            {/* Embed button */}
             {!doc.is_indexed && (
-              <div className="mt-2">
+              <div className="pt-2">
                 <EmbedClient docId={doc.id} refresh={refresh} />
               </div>
             )}
           </CardContent>
         </div>
-
-        <Button
-          variant="ghost"
-          className="text-sm px-2 py-0 h-auto underline underline-offset-2"
-          onClick={() => setEditOpen(true)}
-        >
-          Edit
-        </Button>
       </Card>
 
       <EditDetailsDrawer
