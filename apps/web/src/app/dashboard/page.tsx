@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import UploadModal from '@/components/upload/upload-modal';
 import DocumentCard from '@/components/document/document-card';
+import ChatClient from '@/components/chat/chat-client';
 
 export const dynamic = 'force-dynamic'; // force per-request cookies
 
@@ -38,7 +39,7 @@ export default async function DashboardPage() {
         </p>
       </section>
 
-      {/* Stats Section (placeholder for now) */}
+      {/* Stats Section */}
       <section className="grid md:grid-cols-3 gap-6 mb-12 max-w-5xl mx-auto">
         {[
           {
@@ -64,7 +65,7 @@ export default async function DashboardPage() {
         ))}
       </section>
 
-      {/* Upload & Library */}
+      {/* Upload & Vault */}
       <section className="text-center mb-12">
         <h2 className="text-2xl font-semibold mb-4">Quick Actions</h2>
         <div className="flex flex-col sm:flex-row justify-center gap-4">
@@ -76,7 +77,7 @@ export default async function DashboardPage() {
       </section>
 
       {/* Document List */}
-      <section className="max-w-4xl mx-auto space-y-4">
+      <section className="max-w-4xl mx-auto space-y-4 mb-16">
         {documents && documents.length > 0 ? (
           documents.map((doc) => (
             <DocumentCard
@@ -84,7 +85,7 @@ export default async function DashboardPage() {
               doc={doc}
               refresh={async () => {
                 'use server';
-                redirect('/dashboard'); // SSR refresh
+                redirect('/dashboard');
               }}
             />
           ))
@@ -93,6 +94,11 @@ export default async function DashboardPage() {
             No documents uploaded yet.
           </p>
         )}
+      </section>
+
+      {/* Chat Interface */}
+      <section className="max-w-3xl mx-auto">
+        <ChatClient />
       </section>
 
       {/* Footer */}
