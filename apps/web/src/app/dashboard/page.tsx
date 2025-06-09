@@ -11,12 +11,14 @@ import DocumentList from '@/components/document/document-list';
 import ChatClient from '@/components/chat/chat-client';
 import { fetchDocuments } from '@/lib/documents/documents';
 import type { DocFilters } from '@/lib/documents/documents';
+import { useNotifications } from '@/hooks/useNotifications';
 
 export default function DashboardPage() {
   const { session, isLoading } = useSessionContext();
   const [filters, setFilters] = useState<DocFilters>({ limit: 100 });
   const [typing, setTyping] = useState('');
   const [stats, setStats] = useState({ count: 0, fields: 0, size: 0 });
+  const { notifications } = useNotifications();
 
   useEffect(() => {
     fetchDocuments({ limit: 100 }).then(({ data }) => {
@@ -66,6 +68,28 @@ export default function DashboardPage() {
         ))}
       </section>
 
+      {/* Expiring Soon Notifications */}
+      <section className="mb-12 max-w-4xl mx-auto">
+        <h2 className="text-xl font-semibold mb-4">📅 Upcoming Expirations ({notifications.length})</h2>
+        {notifications.length === 0 ? (
+          <p className="text-sm text-muted-foreground">No documents expiring soon.</p>
+        ) : (
+          <ul className="space-y-2">
+            {notifications.map((n: any) => (
+              <li
+                key={n.id}
+                className="flex justify-between border p-3 rounded-md bg-muted/30"
+              >
+                <span className="font-medium truncate max-w-xs">{n.title}</span>
+                <span className="text-sm text-muted-foreground">
+                  ⏳ {new Date(n.expires_at).toLocaleDateString()}
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+
       {/* Upload + Filters */}
       <section className="text-center mb-12">
         <h2 className="text-2xl font-semibold mb-4">Quick Actions</h2>
@@ -107,7 +131,7 @@ export default function DashboardPage() {
 
       {/* Document Grid */}
       <section className="max-w-screen-xl mx-auto space-y-4 mb-16">
-        <div className="min-h-[20rem]"> {/* Change is here */}
+        <div className="min-h-[20rem]">
           <DocumentList filters={filters} />
         </div>
       </section>

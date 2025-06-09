@@ -23,7 +23,8 @@ type Props = {
     classify_confidence: number | null;
     expiry_date: string | null;
     is_indexed: boolean | null;
-    thumbnail_url?: string | null; // optional field for preview
+    thumbnail_url?: string | null;
+    notification_id?: string; // Optional for marking read
   };
   refresh: () => void;
   ocrPromise?: Promise<number>;
@@ -43,6 +44,30 @@ export default function DocumentCard({ doc, refresh, ocrPromise }: Props) {
       setStatus('done');
     });
   }, [ocrPromise]);
+
+  // Optional hook to mark notification as read on mount
+  useEffect(() => {
+    if (!doc.notification_id) return;
+
+    fetch('/api/notifications', {
+      method: 'PATCH',
+      body: JSON.stringify({ id: doc.notification_id }),
+    }).then(() => refresh());
+  }, [doc.notification_id, refresh]);
+
+  const expiresSoon = doc.expiry_date
+    ? new Date(doc.expiry_date).getTime() - Date.now() < 30 * 24 * 60 * 60 * 1000 &&
+      new Date(doc.expiry_date).getTime() > Date.now()
+    : false;
+
+  const getDocIcon = (type: string | null) => {
+    switch (type) {
+      case 'passport': return '🛂';
+      case 'receipt': return '🧾';
+      case 'id': return '🆔';
+      default: return '📄';
+    }
+  };
 
   return (
     <>
@@ -73,7 +98,7 @@ export default function DocumentCard({ doc, refresh, ocrPromise }: Props) {
             {/* Title & Edit button */}
             <div className="flex items-center justify-between">
               <p className="font-medium text-sm line-clamp-1 flex gap-2 items-center">
-                {doc.title ?? doc.file_name}
+                {getDocIcon(doc.type_enum)} {doc.title ?? doc.file_name}
                 {doc.is_indexed && (
                   <Badge variant="success" className="text-xs">
                     Indexed ✓
@@ -89,6 +114,13 @@ export default function DocumentCard({ doc, refresh, ocrPromise }: Props) {
               </Button>
             </div>
 
+            {/* Expiry badge */}
+            {expiresSoon && doc.expiry_date && (
+              <div className="text-sm text-red-600 bg-red-50 border border-red-200 rounded px-2 py-1 inline-block">
+                ⚠️ Expiring on {new Date(doc.expiry_date).toLocaleDateString()}
+              </div>
+            )}
+
             {/* Meta details */}
             <p className="text-xs text-muted-foreground">
               Uploaded:{' '}
@@ -98,10 +130,7 @@ export default function DocumentCard({ doc, refresh, ocrPromise }: Props) {
             </p>
 
             {doc.type_enum && (
-              <Badge
-                variant="outline"
-                className="text-xs mt-1 capitalize"
-              >
+              <Badge variant="outline" className="text-xs mt-1 capitalize">
                 {doc.type_enum}
               </Badge>
             )}

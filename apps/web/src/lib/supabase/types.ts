@@ -1,3 +1,7 @@
+/* ─────────────────────────────────────────────
+   Supabase generated types - manual extension
+───────────────────────────────────────────── */
+
 export type Json =
   | string
   | number
@@ -9,14 +13,15 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      /* ───────── users ───────── */
       users: {
         Row: {
-          id: string; // uuid
+          id: string;              // uuid
           email: string;
-          created_at: string | null; // timestamp with time zone
+          created_at: string | null; // timestamptz
         };
         Insert: {
-          id: string; // must match auth.users uuid
+          id: string;
           email: string;
           created_at?: string | null;
         };
@@ -27,6 +32,7 @@ export type Database = {
         };
       };
 
+      /* ───────── documents ───────── */
       documents: {
         Row: {
           id: string;
@@ -35,12 +41,13 @@ export type Database = {
           mime_type: string;
           storage_path: string;
           uploaded_at: string | null;
-          vector_embedding: number[] | null; // pgvector
+          vector_embedding: number[] | null;   // pgvector
           type_enum: string | null;
           title: string | null;
-          expiry_date: string | null; // ISO 8601 format date string
+          expiry_date: string | null;
           classify_confidence: number | null;
-          is_indexed: boolean | null; // ✅ new field
+          is_indexed: boolean | null;
+          file_size?: number | null;           // optional - if you added it
         };
         Insert: {
           id?: string;
@@ -54,7 +61,8 @@ export type Database = {
           title?: string | null;
           expiry_date?: string | null;
           classify_confidence?: number | null;
-          is_indexed?: boolean | null; // ✅ new field
+          is_indexed?: boolean | null;
+          file_size?: number | null;
         };
         Update: {
           id?: string;
@@ -68,10 +76,12 @@ export type Database = {
           title?: string | null;
           expiry_date?: string | null;
           classify_confidence?: number | null;
-          is_indexed?: boolean | null; // ✅ new field
+          is_indexed?: boolean | null;
+          file_size?: number | null;
         };
       };
 
+      /* ───────── doc_fields ───────── */
       doc_fields: {
         Row: {
           id: string;
@@ -95,6 +105,37 @@ export type Database = {
           field_name?: string | null;
           field_value?: string | null;
           confidence?: number | null;
+          created_at?: string | null;
+        };
+      };
+
+      /* ───────── notifications ───────── */
+      notifications: {
+        Row: {
+          id: string;
+          user_id: string;
+          document_id: string;
+          title: string;
+          expires_at: string;           // timestamptz
+          is_read: boolean | null;
+          created_at: string | null;    // timestamptz
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          document_id: string;
+          title: string;
+          expires_at: string;
+          is_read?: boolean | null;
+          created_at?: string | null;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          document_id?: string;
+          title?: string;
+          expires_at?: string;
+          is_read?: boolean | null;
           created_at?: string | null;
         };
       };
