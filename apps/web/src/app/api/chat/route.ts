@@ -67,7 +67,7 @@ export async function POST(req: NextRequest) {
     id: string | number;
     score: number;
     payload: { doc_id: string; chunk: string };
-  }[] = qdrantJson.result ?? [];
+  }[] = (qdrantJson as any).result ?? [];
 
   const context = result
     .filter((r) => r.payload?.doc_id && r.payload?.chunk)
@@ -96,7 +96,7 @@ export async function POST(req: NextRequest) {
       const answer =
         typeof data === 'string'
           ? data
-          : data?.[0]?.generated_text ?? '🤖 No response generated.';
+          : (data as any)?.[0]?.generated_text ?? '🤖 No response generated.';
 
       return new Response(answer, {
         status: 200,
