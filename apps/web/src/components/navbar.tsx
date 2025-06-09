@@ -45,7 +45,7 @@ export function Navbar() {
         },
       });
     }
-  }, [notifications]);
+  }, [notifications, router]);
 
   const logout = async () => {
     await supabase.auth.signOut();

@@ -23,7 +23,7 @@ const Filler = ({ message }: { message: string }) => (
       {message}
     </h3>
     <p className="text-sm max-w-md animate-fade-up animate-delay-300">
-      Whether you're uploading passports, receipts, or contracts — everything is end-to-end encrypted and searchable.
+      Whether you are uploading passports, receipts, or contracts — everything is end-to-end encrypted and searchable.
     </p>
   </div>
 );
