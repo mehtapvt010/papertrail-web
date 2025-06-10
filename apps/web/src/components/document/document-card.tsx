@@ -4,10 +4,12 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { LoaderCircle, CheckCircle2 } from 'lucide-react';
+import { LoaderCircle, CheckCircle2, Share2 } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import EditDetailsDrawer from './edit-details-drawer';
 import Image from 'next/image';
+import { toast } from 'sonner';
+import { supabaseBrowser } from '@/lib/supabase/browser';
 
 const EmbedClient = dynamic(() => import('@/components/embed/EmbedClient'), {
   ssr: false,
@@ -24,7 +26,7 @@ type Props = {
     expiry_date: string | null;
     is_indexed: boolean | null;
     thumbnail_url?: string | null;
-    notification_id?: string; // Optional for marking read
+    notification_id?: string;
   };
   refresh: () => void;
   ocrPromise?: Promise<number>;
@@ -45,35 +47,80 @@ export default function DocumentCard({ doc, refresh, ocrPromise }: Props) {
     });
   }, [ocrPromise]);
 
-  // Optional hook to mark notification as read on mount
   useEffect(() => {
-    if (!doc.notification_id) return;
-
-    fetch('/api/notifications', {
-      method: 'PATCH',
-      body: JSON.stringify({ id: doc.notification_id }),
-    }).then(() => refresh());
+    const markNotificationRead = async () => {
+      if (!doc.notification_id) return;
+  
+      const supabase = supabaseBrowser();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+  
+      if (!session) return; // 🚫 Skip if not signed in
+  
+      await fetch('/api/notifications', {
+        method: 'PATCH',
+        body: JSON.stringify({ id: doc.notification_id }),
+      });
+  
+      refresh();
+    };
+  
+    markNotificationRead();
   }, [doc.notification_id, refresh]);
+  
 
-  const expiresSoon = doc.expiry_date
-    ? new Date(doc.expiry_date).getTime() - Date.now() < 30 * 24 * 60 * 60 * 1000 &&
-      new Date(doc.expiry_date).getTime() > Date.now()
-    : false;
+  const expiresSoon =
+    doc.expiry_date &&
+    new Date(doc.expiry_date).getTime() - Date.now() < 30 * 24 * 60 * 60 * 1000 &&
+    new Date(doc.expiry_date).getTime() > Date.now();
 
   const getDocIcon = (type: string | null) => {
     switch (type) {
-      case 'passport': return '🛂';
-      case 'receipt': return '🧾';
-      case 'id': return '🆔';
-      default: return '📄';
+      case 'passport':
+        return '🛂';
+      case 'receipt':
+        return '🧾';
+      case 'id':
+        return '🆔';
+      default:
+        return '📄';
     }
+  };
+
+  const handleShare = async () => {
+    const res = await fetch('/api/share/create', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ documentId: doc.id }),
+    });
+
+    if (!res.ok) {
+      toast.error('Failed to create share link');
+      return;
+    }
+
+    const { token, pin } = await res.json() as { token: string; pin: string };
+
+    const shareUrl = `${window.location.origin}/share/${token}`;
+    const full = `${shareUrl} PIN: ${pin}`;
+
+    try {
+      await navigator.clipboard.writeText(full);
+      toast.success('🔗 Share Link Created', {
+        description: `PIN: ${pin}`,
+      });
+    } catch {
+      toast.warning('Copied URL only. PIN: ' + pin);
+    }
+
+    //window.plausible?.('Share Link Created');
   };
 
   return (
     <>
       <Card className="flex items-start justify-between gap-4 p-4 shadow-sm border bg-background transition-colors">
         <div className="flex gap-3 w-full">
-          {/* Status icon */}
           <div className="flex-shrink-0 pt-1">
             {status === 'pending' ? (
               <LoaderCircle className="animate-spin text-muted-foreground" />
@@ -83,7 +130,6 @@ export default function DocumentCard({ doc, refresh, ocrPromise }: Props) {
           </div>
 
           <CardContent className="p-0 space-y-2 w-full">
-            {/* Lazy Thumbnail */}
             {doc.thumbnail_url && (
               <Image
                 src={doc.thumbnail_url}
@@ -95,7 +141,6 @@ export default function DocumentCard({ doc, refresh, ocrPromise }: Props) {
               />
             )}
 
-            {/* Title & Edit button */}
             <div className="flex items-center justify-between">
               <p className="font-medium text-sm line-clamp-1 flex gap-2 items-center">
                 {getDocIcon(doc.type_enum)} {doc.title ?? doc.file_name}
@@ -105,23 +150,32 @@ export default function DocumentCard({ doc, refresh, ocrPromise }: Props) {
                   </Badge>
                 )}
               </p>
-              <Button
-                variant="ghost"
-                className="text-xs px-2 py-0 h-auto underline underline-offset-2"
-                onClick={() => setEditOpen(true)}
-              >
-                Edit
-              </Button>
+
+              <div className="flex gap-2 items-center">
+                <Button
+                  variant="ghost"
+                  className="text-xs px-2 py-0 h-auto underline underline-offset-2"
+                  onClick={() => setEditOpen(true)}
+                >
+                  Edit
+                </Button>
+                <Button
+                  variant="ghost"
+                  className="text-xs px-2 py-0 h-auto text-muted-foreground"
+                  onClick={handleShare}
+                >
+                  <Share2 size={14} className="mr-1" />
+                  Share
+                </Button>
+              </div>
             </div>
 
-            {/* Expiry badge */}
             {expiresSoon && doc.expiry_date && (
               <div className="text-sm text-red-600 bg-red-50 border border-red-200 rounded px-2 py-1 inline-block">
                 ⚠️ Expiring on {new Date(doc.expiry_date).toLocaleDateString()}
               </div>
             )}
 
-            {/* Meta details */}
             <p className="text-xs text-muted-foreground">
               Uploaded:{' '}
               {doc.uploaded_at
@@ -147,7 +201,6 @@ export default function DocumentCard({ doc, refresh, ocrPromise }: Props) {
               </p>
             )}
 
-            {/* Embed button */}
             {!doc.is_indexed && (
               <div className="pt-2">
                 <EmbedClient docId={doc.id} refresh={refresh} />
