@@ -4,7 +4,8 @@ import type { Metadata } from 'next';
 import { ReactNode } from 'react';
 import { Navbar } from '../components/navbar';
 import { SupabaseProvider } from '../components/supabase-provider';
-import ThemeProvider from '../components/theme-provider'; // ✅ step 3
+import ThemeProvider from '../components/theme-provider';
+import { Toaster } from 'react-hot-toast'; // ✅ Global toast support
 
 export const metadata: Metadata = {
   title: 'PaperTrail AI',
@@ -27,6 +28,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           <SupabaseProvider>
             <Navbar />
             <main className="min-h-[calc(100vh-56px)]">{children}</main>
+            <Toaster /> {/* ✅ Add this to support toast messages */}
           </SupabaseProvider>
         </ThemeProvider>
       </body>

@@ -16,9 +16,9 @@ export type Database = {
       /* ───────── users ───────── */
       users: {
         Row: {
-          id: string;              // uuid
+          id: string;
           email: string;
-          created_at: string | null; // timestamptz
+          created_at: string | null;
         };
         Insert: {
           id: string;
@@ -41,13 +41,13 @@ export type Database = {
           mime_type: string;
           storage_path: string;
           uploaded_at: string | null;
-          vector_embedding: number[] | null;   // pgvector
+          vector_embedding: number[] | null;
           type_enum: string | null;
           title: string | null;
           expiry_date: string | null;
           classify_confidence: number | null;
           is_indexed: boolean | null;
-          file_size?: number | null;           // optional - if you added it
+          file_size?: number | null;
         };
         Insert: {
           id?: string;
@@ -116,9 +116,9 @@ export type Database = {
           user_id: string;
           document_id: string;
           title: string;
-          expires_at: string;           // timestamptz
+          expires_at: string;
           is_read: boolean | null;
-          created_at: string | null;    // timestamptz
+          created_at: string | null;
         };
         Insert: {
           id?: string;
@@ -136,6 +136,34 @@ export type Database = {
           title?: string;
           expires_at?: string;
           is_read?: boolean | null;
+          created_at?: string | null;
+        };
+      };
+
+      /* ───────── shares ───────── */
+      shares: {
+        Row: {
+          id: string;
+          document_id: string;
+          token: string;
+          pin_hash: string;
+          expires_at: string;
+          created_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          document_id: string;
+          token: string;
+          pin_hash: string;
+          expires_at?: string;
+          created_at?: string | null;
+        };
+        Update: {
+          id?: string;
+          document_id?: string;
+          token?: string;
+          pin_hash?: string;
+          expires_at?: string;
           created_at?: string | null;
         };
       };
