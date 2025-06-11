@@ -11,6 +11,7 @@ import { useTheme } from 'next-themes';
 import { useEffect, useState } from 'react';
 import { LuSun as Sun, LuMoon as Moon, LuBell } from 'react-icons/lu';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { useVault } from '@/providers/VaultProvider'; // ✅ import vault provider
 
 export function Navbar() {
   const { session, isLoading } = useSessionContext();
@@ -27,7 +28,7 @@ export function Navbar() {
 
   const markAsRead = async (id: string) => {
     await supabase.from('notifications').update({ is_read: true }).eq('id', id);
-    mutate(); // refresh local cache
+    mutate();
   };
 
   const markAllAsRead = async () => {
@@ -47,8 +48,11 @@ export function Navbar() {
     }
   }, [notifications, router]);
 
+  const { lock } = useVault();  // ✅ grab vault lock method
+
   const logout = async () => {
     await supabase.auth.signOut();
+    lock();  // ✅ clear vault state when logging out
     router.push('/sign-in');
   };
 
@@ -60,7 +64,6 @@ export function Navbar() {
 
       {!isLoading && (
         <div className="flex items-center gap-3">
-          {/* Dark Mode Toggle */}
           {mounted && (
             <Button
               size="icon"
@@ -72,7 +75,6 @@ export function Navbar() {
             </Button>
           )}
 
-          {/* Notifications */}
           {session && (
             <Popover open={open} onOpenChange={setOpen}>
               <PopoverTrigger asChild>
@@ -124,7 +126,6 @@ export function Navbar() {
             </Popover>
           )}
 
-          {/* Auth Controls */}
           {session ? (
             <>
               <Link href="/dashboard" className="text-sm">

@@ -5,6 +5,7 @@ import { ReactNode } from 'react';
 import { Navbar } from '../components/navbar';
 import { SupabaseProvider } from '../components/supabase-provider';
 import ThemeProvider from '../components/theme-provider';
+import { VaultProvider } from '../providers/VaultProvider';  // ✅ import VaultProvider
 import { Toaster } from 'react-hot-toast'; // ✅ Global toast support
 
 export const metadata: Metadata = {
@@ -26,9 +27,11 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       <body className="min-h-screen bg-background">
         <ThemeProvider>
           <SupabaseProvider>
-            <Navbar />
-            <main className="min-h-[calc(100vh-56px)]">{children}</main>
-            <Toaster /> {/* ✅ Add this to support toast messages */}
+            <VaultProvider>   {/* ✅ <-- we inject vault provider here */}
+              <Navbar />
+              <main className="min-h-[calc(100vh-56px)]">{children}</main>
+              <Toaster />
+            </VaultProvider>
           </SupabaseProvider>
         </ThemeProvider>
       </body>
