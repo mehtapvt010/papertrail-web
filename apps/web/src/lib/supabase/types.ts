@@ -170,6 +170,11 @@ export type Database = {
     };
 
     Views: Record<string, never>;
-    Functions: Record<string, never>;
+    Functions: {
+      storage_usage_bytes: {
+        Args: { p_user: string };
+        Returns: number;
+      };
+    };
   };
 };

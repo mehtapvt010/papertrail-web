@@ -101,9 +101,6 @@ export default function DashboardPage() {
             <h2 className="text-2xl font-semibold mb-4">Quick Actions</h2>
             <div className="flex flex-col sm:flex-row justify-center gap-4 mb-6">
               <UploadModal />
-              <Button size="lg" variant="outline" asChild>
-                <a href="/library">📂 View My Vault</a>
-              </Button>
             </div>
 
             <div className="flex flex-wrap items-center justify-between gap-3 bg-muted/20 p-4 rounded-lg shadow-sm">
