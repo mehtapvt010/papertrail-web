@@ -1,12 +1,12 @@
-// apps/web/src/app/layout.tsx
 import './globals.css';
 import type { Metadata } from 'next';
 import { ReactNode } from 'react';
 import { Navbar } from '../components/navbar';
 import { SupabaseProvider } from '../components/supabase-provider';
 import ThemeProvider from '../components/theme-provider';
-import { VaultProvider } from '../providers/VaultProvider';  // ✅ import VaultProvider
-import { Toaster } from 'react-hot-toast'; // ✅ Global toast support
+import { VaultProvider } from '../providers/VaultProvider';
+import { Toaster } from 'react-hot-toast';
+import { WebVitals } from '../components/WebVitals';  // <-- new import
 
 export const metadata: Metadata = {
   title: 'PaperTrail AI',
@@ -17,7 +17,6 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        {/* ✅ Hosted Plausible analytics */}
         <script
           defer
           data-domain="papertrail.local"
@@ -27,9 +26,10 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       <body className="min-h-screen bg-background">
         <ThemeProvider>
           <SupabaseProvider>
-            <VaultProvider>   {/* ✅ <-- we inject vault provider here */}
+            <VaultProvider>
               <Navbar />
               <main className="min-h-[calc(100vh-56px)]">{children}</main>
+              <WebVitals />  {/* <- pure Next.js instrumentation */}
               <Toaster />
             </VaultProvider>
           </SupabaseProvider>

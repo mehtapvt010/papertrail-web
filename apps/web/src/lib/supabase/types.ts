@@ -18,16 +18,22 @@ export type Database = {
         Row: {
           id: string;
           email: string;
+          name: string | null;
+          app_role: string | null;
           created_at: string | null;
         };
         Insert: {
           id: string;
           email: string;
+          name?: string | null;
+          app_role?: string | null;
           created_at?: string | null;
         };
         Update: {
           id?: string;
           email?: string;
+          name?: string | null;
+          app_role?: string | null;
           created_at?: string | null;
         };
       };
@@ -170,6 +176,7 @@ export type Database = {
     };
 
     Views: Record<string, never>;
+
     Functions: {
       storage_usage_bytes: {
         Args: { p_user: string };
