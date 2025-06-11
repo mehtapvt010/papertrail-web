@@ -7,22 +7,34 @@ import { processAndUpload, UploadProgress } from '@/lib/upload/upload';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { supabaseBrowser } from '@/lib/supabase/browser';
+import { useQuota } from '@/hooks/useQuota';  // <-- use new hook
+import { QUOTA_SOFT_LIMIT } from '@/lib/storage/usage';
+import { toast } from 'sonner';
 
 export default function UploadModal() {
   const [open, setOpen] = useState(false);
   const [progress, setProgress] = useState<UploadProgress | null>(null);
   const supabase = supabaseBrowser();
 
+  const { usage, loading } = useQuota();
+
+  const overQuota = usage !== null && usage > QUOTA_SOFT_LIMIT;
+
   const onDrop = useCallback(
     async (accepted: File[]) => {
       if (!accepted.length) return;
+
       const user = (await supabase.auth.getUser()).data.user;
       if (!user) return alert('Not signed in');
+
+      if (overQuota) {
+        toast.error('Storage quota exceeded — cannot upload.');
+        return;
+      }
 
       setProgress({ pct: 0, stage: 'compressing' });
       try {
         await processAndUpload(accepted[0], user.id, setProgress);
-        // optimistic UI – emit event for dashboard list
         document.dispatchEvent(new CustomEvent('doc:uploaded'));
         setOpen(false);
       } catch (err) {
@@ -32,12 +44,12 @@ export default function UploadModal() {
         setProgress(null);
       }
     },
-    [supabase]
+    [supabase, overQuota]
   );
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     accept: { 'image/*': [], 'application/pdf': [] },
-    maxSize: 5 * 1024 * 1024,          // 5 MB (Supabase free tier guidance)
+    maxSize: 5 * 1024 * 1024,
     multiple: false,
     onDrop
   });
@@ -45,7 +57,9 @@ export default function UploadModal() {
   return (
     <Dialog.Root open={open} onOpenChange={setOpen}>
       <Dialog.Trigger asChild>
-        <Button>➕ Upload Document</Button>
+        <Button disabled={loading || overQuota}>
+          {loading ? 'Checking quota…' : overQuota ? 'Quota exceeded (1 GB)' : '➕ Upload Document'}
+        </Button>
       </Dialog.Trigger>
 
       <Dialog.Portal>
@@ -55,7 +69,6 @@ export default function UploadModal() {
                      -translate-y-1/2 rounded-2xl bg-white p-6 shadow-xl
                      dark:bg-zinc-900"
         >
-          
           <Dialog.Title className="text-lg font-semibold">
             Add a new document
           </Dialog.Title>

@@ -131,6 +131,9 @@ export function Navbar() {
               <Link href="/dashboard" className="text-sm">
                 Dashboard
               </Link>
+              <Link href="/settings" className="text-sm">
+                Settings
+              </Link>
               <Button variant="outline" onClick={logout}>
                 Logout
               </Button>
@@ -140,6 +143,7 @@ export function Navbar() {
               <Link href="/sign-in">Sign In</Link>
             </Button>
           )}
+
         </div>
       )}
     </nav>
