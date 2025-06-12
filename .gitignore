@@ -6,3 +6,5 @@ test_chat_api.sh
 wrangler.toml
 .dev.vars
 vapid.json
+
+/apps/web/workers/kpi-backup

@@ -12,16 +12,18 @@ import ChatClient from '@/components/chat/chat-client';
 import { fetchDocuments } from '@/lib/documents/documents';
 import type { DocFilters } from '@/lib/documents/documents';
 import { useNotifications } from '@/hooks/useNotifications';
-import UnlockModal from '@/components/vault/UnlockModal'; // ✅ import UnlockModal
-import { useVault } from '@/providers/VaultProvider'; // ✅ import VaultProvider hook
+import UnlockModal from '@/components/vault/UnlockModal';
+import { useVault } from '@/providers/VaultProvider';
+import { useUserProfile } from '@/hooks/useUserProfile';  // ✅ import the shared hook
 
 export default function DashboardPage() {
   const { session, isLoading } = useSessionContext();
+  const { profile, loading: profileLoading } = useUserProfile(); // ✅ use hook
   const [filters, setFilters] = useState<DocFilters>({ limit: 100 });
   const [typing, setTyping] = useState('');
   const [stats, setStats] = useState({ count: 0, fields: 0, size: 0 });
   const { notifications } = useNotifications();
-  const { isUnlocked } = useVault(); // ✅ vault unlock state
+  const { isUnlocked } = useVault();
 
   useEffect(() => {
     fetchDocuments({ limit: 100 }).then(({ data }) => {
@@ -40,15 +42,16 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-background text-foreground px-6 py-12">
-      {/* ✅ Vault unlock modal always mounted */}
       <UnlockModal />
 
-      {/* ✅ Block dashboard until vault is unlocked */}
       {!isUnlocked ? null : (
         <>
           <section className="mb-12 text-center">
             <h1 className="text-3xl md:text-4xl font-bold mb-2">
-              Welcome back, <span className="text-primary">{session?.user.email}</span>
+              Welcome back,{' '}
+              <span className="text-primary">
+                {profile?.name || session?.user?.email?.split('@')[0] || 'User'}
+              </span>
             </h1>
             <p className="text-muted-foreground text-lg">
               Your encrypted documents are safe and searchable — anytime, anywhere.
@@ -66,10 +69,7 @@ export default function DashboardPage() {
               label: 'Storage Used',
               value: (stats.size / 1024).toFixed(1) + ' KB',
             }].map((stat, i) => (
-              <div
-                key={i}
-                className="bg-muted border rounded-lg p-6 shadow-sm text-center"
-              >
+              <div key={i} className="bg-muted border rounded-lg p-6 shadow-sm text-center">
                 <p className="text-3xl font-semibold mb-2">{stat.value}</p>
                 <p className="text-sm text-muted-foreground">{stat.label}</p>
               </div>
@@ -83,10 +83,7 @@ export default function DashboardPage() {
             ) : (
               <ul className="space-y-2">
                 {notifications.map((n: any) => (
-                  <li
-                    key={n.id}
-                    className="flex justify-between border p-3 rounded-md bg-muted/30"
-                  >
+                  <li key={n.id} className="flex justify-between border p-3 rounded-md bg-muted/30">
                     <span className="font-medium truncate max-w-xs">{n.title}</span>
                     <span className="text-sm text-muted-foreground">
                       ⏳ {new Date(n.expires_at).toLocaleDateString()}

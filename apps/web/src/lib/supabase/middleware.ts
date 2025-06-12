@@ -1,7 +1,7 @@
 // utils/supabase/middleware.ts
 import { createServerClient, type CookieOptions } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
-import type { Database } from './types'; // Adjust path if your ./types.ts is elsewhere
+import type { Database } from './types';
 
 export async function updateSession(request: NextRequest) {
   const response = NextResponse.next({
@@ -19,21 +19,17 @@ export async function updateSession(request: NextRequest) {
           return request.cookies.get(name)?.value;
         },
         set(name: string, value: string, options: CookieOptions) {
-          // If the cookie is set, update the request cookies and response cookies
           request.cookies.set({ name, value, ...options });
           response.cookies.set({ name, value, ...options });
         },
         remove(name: string, options: CookieOptions) {
-          // If the cookie is removed, update the request cookies and response cookies
-          request.cookies.set({ name, value: '', ...options });
-          response.cookies.set({ name, value: '', ...options });
+          request.cookies.delete(name);
+          response.cookies.delete(name);
         },
       },
     }
   );
 
-  // Refreshing the session - this will refresh the session if expired.
   await supabase.auth.getUser();
-
   return response;
 }
