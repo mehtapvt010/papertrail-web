@@ -3,8 +3,11 @@ node_modules
 .env.local
 upload_test_vector.sh
 test_chat_api.sh
+seed-1000.sh
 wrangler.toml
 .dev.vars
 vapid.json
 
 /apps/web/workers/kpi-backup
+
+/apps/web/test-fixtures

@@ -12,6 +12,7 @@ const compat = new FlatCompat({
 const eslintConfig = [
   ...compat.extends("next/core-web-vitals", "next/typescript"),
   {
+    files: ["**/*.js", "**/*.jsx", "**/*.ts", "**/*.tsx"],
     rules: {
       // Disables warnings/errors for unused variables in JS files
       "no-unused-vars": "off",
@@ -24,6 +25,9 @@ const eslintConfig = [
 
       // Disables: 'Unexpected any. Specify a different type.'
       "@typescript-eslint/no-explicit-any": "off",
+
+      // ADD THIS LINE: Disables 'Expected an assignment or function call...'
+      "@typescript-eslint/no-unused-expressions": "off",
     },
   },
 ];

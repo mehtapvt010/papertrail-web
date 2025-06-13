@@ -1,6 +1,11 @@
-// src/lib/ocr/ocr.ts
+// apps/web/src/lib/ocr/ocr.ts
+
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { createWorker, PSM, OEM } from 'tesseract.js';
+import { createWorker, PSM, OEM, type Worker } from 'tesseract.js';
+import { parse } from 'mrz';
+import type { parse as parseMrzType } from 'mrz';
+
+export type MRZFields = ReturnType<typeof parseMrzType>['fields'];
 
 function assertBrowser() {
   if (typeof window === 'undefined') {
@@ -8,62 +13,56 @@ function assertBrowser() {
   }
 }
 
-/**
- * Initialize a Tesseract worker with a more aggressive page‐segmentation mode
- * and a limited whitelist (common for passports). If you find that this
- * misses some characters, you can remove the whitelist or add more symbols.
- */
-async function getWorker() {
-  assertBrowser();
-  // createWorker() returns a Promise<Worker> in the latest tesseract.js types
-  const worker = await createWorker();
-
-  // 1) load English
-  await worker.load();
-  await worker.load('eng');
-  // 2) initialize with LSTM engine only
-  await worker.reinitialize('eng', OEM.LSTM_ONLY);
-  // 3) tell Tesseract to treat the entire page as a single block of text
-  await worker.setParameters({
-    tessedit_pageseg_mode: PSM.SINGLE_BLOCK, 
-    // Optional whitelist: uppercase letters, digits, space, slash, less‐than sign
-    // Passport MRZ often uses A–Z, 0–9, “<”.  Feel free to tweak or remove if
-    // you find that it’s dropping valid characters. 
-    tessedit_char_whitelist: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789<>/ ',
+let workerPromise: Promise<Worker> | null = null;
+async function getWorker(): Promise<Worker> {
+  if (workerPromise) return workerPromise;
+  workerPromise = new Promise(async (resolve) => {
+    const w = await createWorker();
+    await w.load();
+    await w.load('eng');
+    await w.reinitialize('eng', OEM.LSTM_ONLY);
+    await w.setParameters({ tessedit_pageseg_mode: PSM.AUTO });
+    resolve(w);
   });
-
-  return worker;
+  return workerPromise;
 }
 
-/**
- * Runs OCR on a given full-resolution image blob. Strips out non-ASCII,
- * trims to 1000 chars max, and returns the raw text + latency.
- */
 export async function runOcr(
   blob: Blob
-): Promise<{ text: string; latency: number }> {
+): Promise<{ text: string; latency: number; mrz?: MRZFields }> {
+  assertBrowser();
   const t0 = performance.now();
   const worker = await getWorker();
-
-  // Recognize the entire blob at once
   const { data } = await worker.recognize(blob);
+  const text = (data.text ?? '').replace(/[^\x00-\x7F]/g, '').trim();
+  const latency = Math.round(performance.now() - t0);
+  let mrz: MRZFields | undefined;
 
-  // Clean up
-  await worker.terminate();
+  // FIX: More robust MRZ line detection
+  if (text.includes('<')) {
+    try {
+      // Filter for lines that look like MRZ lines (long, alphanumeric, containing '<')
+      const allLines = text.split('\n').map(line => line.replace(/[\s\r]/g, ''));
+      const potentialMrzLines = allLines.filter(line => line.length > 28 && line.includes('<') && /^[A-Z0-9<]+$/.test(line));
 
-  // Keep only ASCII (so classify’s regex for “Date of …” is more reliable)
-  let text = (data.text ?? '').replace(/[^\x00-\x7F]/g, '').trim();
-  if (text.length > 1000) {
-    text = text.slice(0, 1000); // clip to 1000 chars
+      if (potentialMrzLines.length >= 2) {
+        // The 'mrz' library can often find the correct lines from a joined block
+        const mrzBlock = potentialMrzLines.join('\n');
+        const result = parse(mrzBlock);
+        if (result.valid) {
+          mrz = result.fields;
+        } else {
+          console.warn("MRZ parsing failed. Details:", result.details.filter(d => d.error));
+        }
+      }
+    } catch (e) {
+      console.warn('Error during MRZ parsing:', e);
+    }
   }
 
-  const latency = Math.round(performance.now() - t0);
-  return { text, latency };
+  return { text, latency, mrz };
 }
 
-/**
- * Inserts the raw OCR text into Supabase under doc_fields.{ raw_ocr }.
- */
 export async function storeRawOcr(
   supabase: SupabaseClient,
   documentId: string,
@@ -73,7 +72,6 @@ export async function storeRawOcr(
     document_id: documentId,
     field_name: 'raw_ocr',
     field_value: rawText,
-    confidence: 1.0,
   });
   if (error) throw error;
 }
