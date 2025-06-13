@@ -136,6 +136,16 @@
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
+    color: hsl(var(--primary)); /* Fallback color */
+  }
+  
+  /* Ensure text is visible in both light and dark modes */
+  .dark .text-gradient {
+    background: linear-gradient(135deg, hsl(var(--primary-foreground)) 0%, hsl(var(--primary-foreground) / 0.8) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    color: hsl(var(--primary-foreground)); /* Fallback color for dark mode */
   }
   
   .animate-fade-in {
