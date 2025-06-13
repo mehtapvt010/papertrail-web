@@ -1,6 +1,8 @@
+// apps/web/src/components/document/document-list.tsx
+
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { fetchDocuments, DocFilters } from '@/lib/documents/documents';
 import DocumentCard from './document-card';
 import DocumentSkeleton from './document-skeleton';
@@ -34,7 +36,7 @@ export default function DocumentList({ filters }: { filters: DocFilters }) {
   const [docs, setDocs] = useState<Document[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
+  const refreshDocs = useCallback(() => {
     setLoading(true);
     fetchDocuments(filters).then(({ data }) => {
       setDocs(data ?? []);
@@ -42,8 +44,27 @@ export default function DocumentList({ filters }: { filters: DocFilters }) {
     });
   }, [filters]);
 
+  // Effect for initial load and when filters change
+  useEffect(() => {
+    refreshDocs();
+  }, [filters, refreshDocs]);
+
+  // Effect to listen for the custom upload event for auto-refresh
+  useEffect(() => {
+    const handleUploadSuccess = () => {
+      console.log('✅ Upload successful, refreshing dashboard...');
+      refreshDocs();
+    };
+
+    document.addEventListener('doc:uploaded', handleUploadSuccess);
+
+    // Cleanup: remove the event listener when the component unmounts
+    return () => {
+      document.removeEventListener('doc:uploaded', handleUploadSuccess);
+    };
+  }, [refreshDocs]); // Re-add listener if refreshDocs changes
+
   return (
-    // The only change is in the className of this div
     <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))' }}>
       {loading
         ? Array.from({ length: 6 }).map((_, i) => <DocumentSkeleton key={i} />)
