@@ -1,11 +1,7 @@
 # PaperTrail AI – Zero-Cost, Privacy-First Document Vault
 
-![Build](https://img.shields.io/github/actions/workflow/status/mehtapvt010/papertrail-web/ci.yml?branch=main)
-![Vercel](https://img.shields.io/vercel/production?label=Vercel%20Deploy)
 ![Supabase](https://img.shields.io/badge/Supabase-Free%20Tier-3ECF8E)
 ![Qdrant](https://img.shields.io/badge/Qdrant-768%20dim%20vectors-ff69b4)
-![License](https://img.shields.io/github/license/mehtapvt010/papertrail-web)
-![Version](https://img.shields.io/github/v/tag/mehtapvt010/papertrail-web)
 
 
 ---
