@@ -2,8 +2,6 @@
 
 ![Supabase](https://img.shields.io/badge/Supabase-Free%20Tier-3ECF8E)
 ![Qdrant](https://img.shields.io/badge/Qdrant-768%20dim%20vectors-ff69b4)
-![Version](https://img.shields.io/github/v/tag/mehtapvt010/papertrail-web)
-
 
 ---
 

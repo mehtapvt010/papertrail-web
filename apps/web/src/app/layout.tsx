@@ -9,6 +9,7 @@ import ThemeProvider from '../components/theme-provider';
 import { VaultProvider } from '../providers/VaultProvider';
 import { Toaster } from 'react-hot-toast';
 import { WebVitals } from '../components/WebVitals';
+import { ConditionalNavbar } from '../components/conditional-navbar';
 
 export const metadata: Metadata = {
   title: 'PaperTrail AI',
@@ -31,8 +32,8 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <ThemeProvider>
           <SupabaseProvider>
             <VaultProvider>
-              <Navbar />
-              <main className="min-h-[calc(100vh-56px)]">{children}</main>
+              <ConditionalNavbar />
+              <main>{children}</main>
               <WebVitals /> {/* ✅ Web Vitals instrumentation for performance */}
               <Toaster />
             </VaultProvider>

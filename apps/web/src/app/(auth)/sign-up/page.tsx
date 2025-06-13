@@ -9,6 +9,9 @@ import {
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
+import Link from 'next/link';
+import { UserPlus, Mail, Lock, Eye, EyeOff, Loader2, FileText, CheckCircle } from 'lucide-react';
+import { toast } from 'sonner';
 
 export default function SignUpPage() {
   const supabase = supabaseBrowser();
@@ -17,6 +20,7 @@ export default function SignUpPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
 
   const onChange = (e: React.ChangeEvent<HTMLInputElement>) =>
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -27,83 +31,181 @@ export default function SignUpPage() {
     setError(null);
     setSuccessMessage(null);
 
-    const { data, error: signUpError } = await supabase.auth.signUp({
-      email: form.email,
-      password: form.password,
-      // You can add options here if needed, like redirect URLs or custom data
-      // options: {
-      //   emailRedirectTo: `${window.location.origin}/auth/callback`,
-      //   data: { full_name: 'John Doe' } // Example custom data
-      // }
-    });
+    try {
+      const { data, error: signUpError } = await supabase.auth.signUp({
+        email: form.email,
+        password: form.password,
+      });
 
-    if (signUpError) {
-      setError(signUpError.message);
-    } else {
-      // Check if user object exists and if email confirmation is likely required
-      // Supabase returns a user object but session is null until confirmation
-      if (data.user && data.user.identities && data.user.identities.length === 0) {
-        // This case indicates an unconfirmed user (common with email confirmation)
-        setSuccessMessage('Account created! Please check your email to confirm your registration.');
-      } else if (data.user) {
-         // This case might occur if email confirmation is disabled or auto-confirmed
-        setSuccessMessage('Account created successfully! You can now sign in.');
-        // Optionally, you could redirect to sign-in or auto-sign-in if your flow allows
-        // router.push('/sign-in');
+      if (signUpError) {
+        setError(signUpError.message);
+        toast.error(signUpError.message);
       } else {
-        // Fallback, though usually covered by error or data.user
-        setSuccessMessage('Sign up process initiated. Please follow any instructions sent to your email.');
+        if (data.user && data.user.identities && data.user.identities.length === 0) {
+          setSuccessMessage('Account created! Please check your email to confirm your registration.');
+          toast.success('Account created! Please check your email to confirm your registration.');
+        } else if (data.user) {
+          setSuccessMessage('Account created successfully! You can now sign in.');
+          toast.success('Account created successfully! You can now sign in.');
+        } else {
+          setSuccessMessage('Sign up process initiated. Please follow any instructions sent to your email.');
+          toast.success('Sign up process initiated. Please follow any instructions sent to your email.');
+        }
+        setForm({ email: '', password: '' });
       }
-      setForm({ email: '', password: '' }); // Clear form on success
+    } catch (err) {
+      setError('An unexpected error occurred');
+      toast.error('An unexpected error occurred');
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   return (
-    <div className="flex h-screen items-center justify-center bg-muted">
-      <Card className="w-full max-w-md">
-        <CardHeader>
-          <CardTitle className="text-center">Create Account</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={signUp} className="space-y-4">
-            <div>
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                name="email"
-                type="email"
-                required
-                value={form.email}
-                onChange={onChange}
-                disabled={loading || !!successMessage}
-              />
+    <div className="min-h-screen bg-background flex items-center justify-center p-4">
+      <div className="w-full max-w-md">
+        {/* Header */}
+        <div className="text-center mb-8">
+          <div className="flex items-center justify-center gap-3 mb-4">
+            <div className="h-12 w-12 rounded-xl bg-primary flex items-center justify-center">
+              <FileText className="h-6 w-6 text-primary-foreground" />
             </div>
-            <div>
-              <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                name="password"
-                type="password"
-                required
-                value={form.password}
-                onChange={onChange}
-                disabled={loading || !!successMessage}
-              />
-            </div>
-            {error && <p className="text-destructive text-sm">{error}</p>}
-            {successMessage && <p className="text-green-600 text-sm">{successMessage}</p>}
-            {!successMessage && (
-              <Button disabled={loading} className="w-full">
-                {loading ? 'Creating account…' : 'Create Account'}
-              </Button>
+          </div>
+          <h1 className="text-3xl font-bold mb-2">Create your account</h1>
+          <p className="text-muted-foreground">
+            Join thousands of users securing their documents
+          </p>
+        </div>
+
+        {/* Sign Up Card */}
+        <Card className="card-hover">
+          <CardHeader className="space-y-1 pb-4">
+            <CardTitle className="text-xl text-center">Create Account</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {!successMessage ? (
+              <form onSubmit={signUp} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="email" className="text-sm font-medium">
+                    Email Address
+                  </Label>
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      id="email"
+                      name="email"
+                      type="email"
+                      required
+                      value={form.email}
+                      onChange={onChange}
+                      className="pl-10"
+                      placeholder="Enter your email"
+                      disabled={loading}
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="password" className="text-sm font-medium">
+                    Password
+                  </Label>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      id="password"
+                      name="password"
+                      type={showPassword ? 'text' : 'password'}
+                      required
+                      value={form.password}
+                      onChange={onChange}
+                      className="pl-10 pr-10"
+                      placeholder="Create a strong password"
+                      disabled={loading}
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="absolute right-1 top-1/2 transform -translate-y-1/2 h-8 w-8 p-0"
+                      onClick={() => setShowPassword(!showPassword)}
+                      disabled={loading}
+                    >
+                      {showPassword ? (
+                        <EyeOff className="h-4 w-4" />
+                      ) : (
+                        <Eye className="h-4 w-4" />
+                      )}
+                    </Button>
+                  </div>
+                </div>
+
+                {error && (
+                  <div className="p-3 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800 rounded-lg">
+                    <p className="text-sm text-red-800 dark:text-red-200">{error}</p>
+                  </div>
+                )}
+
+                <Button 
+                  type="submit" 
+                  disabled={loading} 
+                  className="w-full"
+                  size="lg"
+                >
+                  {loading ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Creating account...
+                    </>
+                  ) : (
+                    <>
+                      <UserPlus className="h-4 w-4 mr-2" />
+                      Create Account
+                    </>
+                  )}
+                </Button>
+
+                <div className="text-center pt-4 border-t border-border/50">
+                  <p className="text-sm text-muted-foreground">
+                    Already have an account?{' '}
+                    <Link 
+                      href="/sign-in" 
+                      className="text-primary hover:underline font-medium"
+                    >
+                      Sign in
+                    </Link>
+                  </p>
+                </div>
+              </form>
+            ) : (
+              <div className="text-center space-y-4">
+                <div className="flex justify-center">
+                  <div className="h-16 w-16 rounded-full bg-green-100 dark:bg-green-900/20 flex items-center justify-center">
+                    <CheckCircle className="h-8 w-8 text-green-600 dark:text-green-400" />
+                  </div>
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold mb-2">Account Created!</h3>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    {successMessage}
+                  </p>
+                  <Link href="/sign-in">
+                    <Button className="w-full" size="lg">
+                      Go to Sign In
+                    </Button>
+                  </Link>
+                </div>
+              </div>
             )}
-            <p className="pt-2 text-center text-sm">
-              Already have an account? <a href="/sign-in" className="underline">Sign In</a>
-            </p>
-          </form>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+
+        {/* Footer */}
+        <div className="text-center mt-8">
+          <p className="text-xs text-muted-foreground">
+            Secure • Encrypted • Private
+          </p>
+        </div>
+      </div>
     </div>
   );
 }
