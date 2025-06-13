@@ -5,7 +5,6 @@ import { useSessionContext } from '@supabase/auth-helpers-react';
 import { redirect } from 'next/navigation';
 import { Input } from '@/components/ui/input';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
-import { Button } from '@/components/ui/button';
 import UploadModal from '@/components/upload/upload-modal';
 import DocumentList from '@/components/document/document-list';
 import ChatClient from '@/components/chat/chat-client';
@@ -15,6 +14,7 @@ import { useNotifications } from '@/hooks/useNotifications';
 import UnlockModal from '@/components/vault/UnlockModal';
 import { useVault } from '@/providers/VaultProvider';
 import { useUserProfile } from '@/hooks/useUserProfile';  // ✅ import the shared hook
+import { OnboardingDialog } from '@/components/onboarding/OnboardingDialog';
 
 export default function DashboardPage() {
   const { session, isLoading } = useSessionContext();
@@ -95,6 +95,7 @@ export default function DashboardPage() {
           </section>
 
           <section className="text-center mb-12">
+          <OnboardingDialog />
             <h2 className="text-2xl font-semibold mb-4">Quick Actions</h2>
             <div className="flex flex-col sm:flex-row justify-center gap-4 mb-6">
               <UploadModal />
