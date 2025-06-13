@@ -22,8 +22,8 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      docId: result.docId,
-      latency: result.latency,
+      //docId: result.docId,  for linting
+      //latency: result.latency, for linting
     });
 
   } catch (err: any) {
