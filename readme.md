@@ -11,6 +11,8 @@
 
 **PaperTrail AI** is a zero-cost, privacy-first web-based document vault that empowers users to securely store, search, and manage their important documents using in-browser encryption, AI-powered OCR, and vector search—all while running entirely on free-tier infrastructure. The system ensures maximum privacy by performing heavy computation directly in the browser, keeping sensitive data encrypted at rest and in transit.
 
+Live at: https://papertrail-web.vercel.app/
+
 ---
 
 ## Table of Contents
@@ -71,7 +73,7 @@
 ### Installation
 
 # Clone the repo
-git clone https://github.com/YOUR_USERNAME/papertrail-web.git
+git clone https://github.com/mehtapvt010/papertrail-web.git
 
 # Navigate into frontend app directory
 cd papertrail-web/apps/web
