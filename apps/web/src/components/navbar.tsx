@@ -19,7 +19,7 @@ export function Navbar() {
   const supabase = supabaseBrowser();
   const router = useRouter();
 
-  const { profile, loading: profileLoading } = useUserProfile();  // ✅ use new hook
+  const { profile, loading: profileLoading, setProfile } = useUserProfile();  // ✅ use new hook
 
   const { theme, systemTheme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
@@ -30,18 +30,30 @@ export function Navbar() {
   const [open, setOpen] = useState(false);
 
   const markAsRead = async (id: string) => {
-    await supabase.from('notifications').update({ is_read: true }).eq('id', id);
-    mutate();
+    if (!session?.user) return;
+    
+    try {
+      await supabase.from('notifications').update({ is_read: true }).eq('id', id);
+      mutate();
+    } catch (error) {
+      console.warn('Error marking notification as read:', error);
+    }
   };
 
   const markAllAsRead = async () => {
-    await supabase.from('notifications').update({ is_read: true }).eq('user_id', session?.user.id);
-    mutate();
-    toast.success('Marked all as read.');
+    if (!session?.user) return;
+    
+    try {
+      await supabase.from('notifications').update({ is_read: true }).eq('user_id', session.user.id);
+      mutate();
+      toast.success('Marked all as read.');
+    } catch (error) {
+      console.warn('Error marking all notifications as read:', error);
+    }
   };
 
   useEffect(() => {
-    if (notifications.length && !notifications[0].is_read) {
+    if (notifications.length && !notifications[0].is_read && session?.user) {
       toast(`"${notifications[0].title}" expires soon`, {
         action: {
           label: 'Open',
@@ -49,15 +61,43 @@ export function Navbar() {
         },
       });
     }
-  }, [notifications, router]);
+  }, [notifications, router, session]);
 
   const { lock } = useVault();
 
   const logout = async () => {
-    await supabase.auth.signOut();
-    lock();
-    router.push('/sign-in');
+    try {
+      // Clear profile and notifications first
+      setProfile(null);
+      
+      // Sign out from Supabase
+      await supabase.auth.signOut();
+      
+      // Lock the vault
+      lock();
+      
+      // Navigate to sign-in page
+      router.push('/sign-in');
+    } catch (error) {
+      console.error('Logout error:', error);
+      // Force navigation even if there's an error
+      router.push('/sign-in');
+    }
   };
+
+  // Don't render navigation items while loading to prevent 406 errors
+  if (isLoading || profileLoading) {
+    return (
+      <nav className="flex items-center justify-between border-b bg-background px-4 py-2">
+        <Link href="/" className="text-lg font-semibold">
+          PaperTrail AI
+        </Link>
+        <div className="flex items-center gap-3">
+          <div className="h-4 w-4 rounded bg-muted animate-pulse" />
+        </div>
+      </nav>
+    );
+  }
 
   return (
     <nav className="flex items-center justify-between border-b bg-background px-4 py-2">
