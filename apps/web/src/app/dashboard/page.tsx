@@ -61,7 +61,7 @@ export default function DashboardPage() {
               <div className="animate-fade-in">
                 <h1 className="text-4xl md:text-5xl font-bold mb-3">
                   Welcome back,{' '}
-                  <span className="text-gradient">
+                  <span className="text-primary">
                     {getUserDisplayName()}
                   </span>
                 </h1>

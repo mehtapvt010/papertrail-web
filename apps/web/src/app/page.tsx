@@ -33,7 +33,9 @@ export default function HomePage() {
           <h1 className="text-5xl md:text-7xl font-bold tracking-tight mb-6 animate-fade-in">
             The world&apos;s simplest
             <br />
-            <span className="text-gradient">Document Vault</span>
+            <span className="text-primary">
+              Document Vault
+            </span>
           </h1>
           <p className="text-xl md:text-2xl text-muted-foreground mb-8 max-w-3xl mx-auto animate-slide-up-delay-1">
             Manage and organize your documents your way. PaperTrail is the AI-native alternative to complex and expensive document management solutions.
