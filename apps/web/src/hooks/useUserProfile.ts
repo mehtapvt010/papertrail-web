@@ -15,29 +15,40 @@ export function useUserProfile() {
 
   useEffect(() => {
     const fetchProfile = async () => {
+      // Clear profile immediately if no session
       if (!session?.user) {
         setProfile(null);
         setLoading(false);
         return;
       }
 
-      const { data, error } = await supabaseClient
-        .from('users')
-        .select('name, app_role')
-        .eq('id', session.user.id)
-        .single();
+      try {
+        const { data, error } = await supabaseClient
+          .from('users')
+          .select('name, app_role')
+          .eq('id', session.user.id)
+          .single();
 
-      if (!error) {
-        setProfile({
-          name: data?.name ?? null,
-          app_role: data?.app_role ?? null,
-        });
+        // Handle 406 or other errors gracefully
+        if (error) {
+          console.warn('Failed to fetch user profile:', error);
+          setProfile(null);
+        } else {
+          setProfile({
+            name: data?.name ?? null,
+            app_role: data?.app_role ?? null,
+          });
+        }
+      } catch (err) {
+        console.warn('Error fetching user profile:', err);
+        setProfile(null);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     };
 
     fetchProfile();
-  }, [session, supabaseClient]);
+  }, [session?.user?.id, supabaseClient]); // Only depend on user ID, not entire session object
 
-  return { profile, loading: loading || sessionLoading };
+  return { profile, loading: loading || sessionLoading, setProfile };
 }

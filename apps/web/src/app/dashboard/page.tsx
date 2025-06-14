@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useSessionContext } from '@supabase/auth-helpers-react';
-import { redirect } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import UploadModal from '@/components/upload/upload-modal';
@@ -21,6 +21,7 @@ export default function DashboardPage() {
   const { session, isLoading } = useSessionContext();
   const { isUnlocked } = useVault();
   const { profile } = useUserProfile();
+  const router = useRouter();
   const [documents, setDocuments] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState<DocFilters>({});
@@ -33,6 +34,13 @@ export default function DashboardPage() {
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  // Handle session redirect
+  useEffect(() => {
+    if (!isLoading && !session) {
+      router.push('/sign-in');
+    }
+  }, [session, isLoading, router]);
 
   // Debounced search and filter effect
   useEffect(() => {
@@ -68,7 +76,14 @@ export default function DashboardPage() {
   }
 
   if (!session) {
-    redirect('/sign-in');
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="flex items-center gap-3">
+          <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-primary to-primary/80 animate-pulse" />
+          <span className="text-lg font-semibold">Redirecting to sign in...</span>
+        </div>
+      </div>
+    );
   }
 
   const getUserDisplayName = () => {
