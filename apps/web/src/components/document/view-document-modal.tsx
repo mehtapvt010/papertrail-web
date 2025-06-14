@@ -20,8 +20,9 @@ export default function ViewDocumentModal({
   documentName 
 }: ViewDocumentModalProps) {
   const [loading, setLoading] = useState(false);
-  const [signedUrl, setSignedUrl] = useState<string | null>(null);
+  const [decryptedData, setDecryptedData] = useState<string | null>(null);
   const [mimeType, setMimeType] = useState<string | null>(null);
+  const [fileName, setFileName] = useState<string | null>(null);
 
   useEffect(() => {
     if (open && documentId) {
@@ -41,16 +42,19 @@ export default function ViewDocumentModal({
       });
 
       if (!response.ok) {
-        throw new Error('Failed to generate view URL');
+        throw new Error('Failed to load document');
       }
 
       const data = await response.json() as {
-        signedUrl: string;
+        decryptedData: string;
         mimeType: string;
         fileName: string;
+        originalFileName: string;
       };
-      setSignedUrl(data.signedUrl);
+      
+      setDecryptedData(data.decryptedData);
       setMimeType(data.mimeType);
+      setFileName(data.fileName);
     } catch (error) {
       console.error('Error generating view URL:', error);
       toast.error('Failed to load document');
@@ -60,26 +64,50 @@ export default function ViewDocumentModal({
   };
 
   const handleDownload = () => {
-    if (!signedUrl) return;
+    if (!decryptedData || !mimeType || !fileName) return;
     
-    const link = document.createElement('a');
-    link.href = signedUrl;
-    link.download = documentName;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    toast.success('Download started');
+    try {
+      // Convert base64 back to blob
+      const binaryString = atob(decryptedData);
+      const bytes = new Uint8Array(binaryString.length);
+      for (let i = 0; i < binaryString.length; i++) {
+        bytes[i] = binaryString.charCodeAt(i);
+      }
+      
+      const blob = new Blob([bytes], { type: mimeType });
+      const url = URL.createObjectURL(blob);
+      
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      URL.revokeObjectURL(url);
+      toast.success('Download started');
+    } catch (error) {
+      console.error('Download error:', error);
+      toast.error('Failed to download document');
+    }
   };
 
   const getFileExtension = (mime: string) => {
     if (mime.includes('pdf')) return 'pdf';
     if (mime.includes('jpeg')) return 'jpg';
     if (mime.includes('png')) return 'png';
+    if (mime.includes('doc')) return 'doc';
+    if (mime.includes('docx')) return 'docx';
     return 'bin';
   };
 
   const isImage = mimeType?.startsWith('image/');
   const isPDF = mimeType === 'application/pdf';
+
+  const getDataUrl = () => {
+    if (!decryptedData || !mimeType) return null;
+    return `data:${mimeType};base64,${decryptedData}`;
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -102,7 +130,7 @@ export default function ViewDocumentModal({
             </Button>
           </div>
           <p className="text-sm text-muted-foreground">
-            {documentName}
+            {fileName || documentName}
           </p>
         </DialogHeader>
 
@@ -114,27 +142,37 @@ export default function ViewDocumentModal({
                 <p className="text-sm text-muted-foreground">Loading document...</p>
               </div>
             </div>
-          ) : signedUrl ? (
+          ) : decryptedData ? (
             <div className="space-y-4">
               <div className="border rounded-lg overflow-hidden bg-muted/20 h-96">
                 {isImage ? (
                   <img
-                    src={signedUrl}
-                    alt={documentName}
+                    src={getDataUrl()!}
+                    alt={fileName || documentName}
                     className="w-full h-full object-contain"
                   />
                 ) : isPDF ? (
                   <iframe
-                    src={signedUrl}
+                    src={getDataUrl()!}
                     className="w-full h-full"
-                    title={documentName}
+                    title={fileName || documentName}
                   />
                 ) : (
-                  <embed
-                    src={signedUrl}
-                    type={mimeType || 'application/octet-stream'}
-                    className="w-full h-full"
-                  />
+                  <div className="w-full h-full flex items-center justify-center">
+                    <div className="text-center space-y-4">
+                      <FileText className="h-16 w-16 mx-auto text-muted-foreground" />
+                      <div>
+                        <p className="font-medium">{fileName || documentName}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {mimeType ? mimeType.toUpperCase() : 'Unknown Type'}
+                        </p>
+                      </div>
+                      <Button onClick={handleDownload}>
+                        <Download className="h-4 w-4 mr-2" />
+                        Download to View
+                      </Button>
+                    </div>
+                  </div>
                 )}
               </div>
 
@@ -158,24 +196,8 @@ export default function ViewDocumentModal({
           ) : (
             <div className="flex items-center justify-center h-96">
               <div className="text-center space-y-4">
-                <FileText className="h-12 w-12 mx-auto text-muted-foreground" />
-                <p className="text-sm text-muted-foreground">
-                  Failed to load document
-                </p>
-                <Button
-                  variant="outline"
-                  onClick={generateViewUrl}
-                  disabled={loading}
-                >
-                  {loading ? (
-                    <>
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      Retrying...
-                    </>
-                  ) : (
-                    'Retry'
-                  )}
-                </Button>
+                <FileText className="h-16 w-16 mx-auto text-muted-foreground" />
+                <p className="text-sm text-muted-foreground">No document data available</p>
               </div>
             </div>
           )}

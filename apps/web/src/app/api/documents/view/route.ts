@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { decrypt } from '@/lib/crypto/crypto';
 
 export async function POST(req: NextRequest) {
   const { documentId }: { documentId: string } = await req.json();
@@ -22,7 +23,7 @@ export async function POST(req: NextRequest) {
   // Get document details and verify ownership
   const { data: doc, error: docErr } = await supabase
     .from('documents')
-    .select('storage_path, mime_type, file_name')
+    .select('storage_path, mime_type, file_name, title')
     .eq('id', documentId)
     .eq('user_id', user.id)
     .single();
@@ -31,21 +32,36 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Document not found' }, { status: 404 });
   }
 
-  // Create signed URL for 1 hour
-  const { data: signedUrlData, error: signedUrlError } = await supabase.storage
-    .from('documents')
-    .createSignedUrl(doc.storage_path, 60 * 60); // 1 hour
+  try {
+    // Download the encrypted file
+    const { data: fileData, error: fileError } = await supabase.storage
+      .from('documents')
+      .download(doc.storage_path);
 
-  if (signedUrlError || !signedUrlData?.signedUrl) {
-    console.error('Signed URL error:', signedUrlError);
+    if (fileError || !fileData) {
+      console.error('File download error:', fileError);
+      return NextResponse.json({
+        error: fileError?.message || 'Failed to download document',
+      }, { status: 500 });
+    }
+
+    // Decrypt the file
+    const arrayBuffer = await fileData.arrayBuffer();
+    const decryptedData = await decrypt(arrayBuffer, user.id);
+
+    // Convert to base64 for transmission
+    const base64Data = Buffer.from(decryptedData).toString('base64');
+
     return NextResponse.json({
-      error: signedUrlError?.message || 'Failed to generate view URL',
+      decryptedData: base64Data,
+      mimeType: doc.mime_type,
+      fileName: doc.title || doc.file_name,
+      originalFileName: doc.file_name,
+    });
+  } catch (error) {
+    console.error('Decryption error:', error);
+    return NextResponse.json({
+      error: 'Failed to decrypt document',
     }, { status: 500 });
   }
-
-  return NextResponse.json({
-    signedUrl: signedUrlData.signedUrl,
-    mimeType: doc.mime_type,
-    fileName: doc.file_name,
-  });
 } 

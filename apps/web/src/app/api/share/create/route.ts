@@ -39,6 +39,9 @@ export async function POST(req: NextRequest) {
   const pin = generatePin();
   const pinHash = await hashPin(pin);
 
+  // Set expiry date to 7 days from now
+  const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+
   // Create signed URL using service role client (bypass RLS)
   const admin = createServerClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -58,6 +61,7 @@ export async function POST(req: NextRequest) {
     document_id: documentId,
     token,
     pin_hash: pinHash,
+    expires_at: expiresAt,
   });
 
   if (insertErr) {

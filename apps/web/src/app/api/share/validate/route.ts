@@ -13,7 +13,7 @@ export async function POST(req: NextRequest) {
 
   const { data: row, error } = await admin
     .from('shares')
-    .select('pin_hash, expires_at, documents(storage_path, user_id, mime_type)')
+    .select('pin_hash, expires_at, documents(storage_path, user_id, mime_type, title, file_name)')
     .eq('token', token)
     .maybeSingle();
 
@@ -21,7 +21,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'link not found' }, { status: 404 });
   }
 
-  if (new Date(row.expires_at) < new Date()) {
+  if (row.expires_at && new Date(row.expires_at) < new Date()) {
     return NextResponse.json({ error: 'link expired' }, { status: 410 });
   }
 
