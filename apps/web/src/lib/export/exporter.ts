@@ -13,7 +13,7 @@ export async function downloadAndDecryptAll() {
   // Fetch all documents owned by the user
   const { data: docs, error: docsError } = await supabase
     .from('documents')
-    .select('id, storage_path, mime_type')
+    .select('id, storage_path, mime_type, file_name, title')
     .eq('user_id', user.id);
 
   if (docsError) {
@@ -37,7 +37,13 @@ export async function downloadAndDecryptAll() {
 
     try {
       const decrypted = await decrypt(arrayBuffer, user.id); // returns Uint8Array
-      zip.file(`${doc.id}.${extFromMime(doc.mime_type)}`, decrypted);
+      
+      // Use title if available, otherwise use file_name, fallback to id
+      const fileName = doc.title || doc.file_name || doc.id;
+      const extension = extFromMime(doc.mime_type);
+      const fullFileName = `${fileName}.${extension}`;
+      
+      zip.file(fullFileName, decrypted);
     } catch (err) {
       console.warn(`Failed to decrypt: ${doc.storage_path}`, err);
       continue;
@@ -51,6 +57,10 @@ const extMap: Record<string, string> = {
   'application/pdf': 'pdf',
   'image/png': 'png',
   'image/jpeg': 'jpg',
+  'image/jpg': 'jpg',
+  'application/msword': 'doc',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document': 'docx',
+  'text/plain': 'txt',
 };
 
 function extFromMime(mime: string): string {

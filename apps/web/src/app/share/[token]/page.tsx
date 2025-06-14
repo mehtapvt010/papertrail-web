@@ -114,44 +114,46 @@ export default function SharePage() {
   };
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-slate-950 dark:via-slate-900 dark:to-slate-800 flex items-center justify-center p-4">
       <div className="w-full max-w-2xl">
         {/* Header */}
         <div className="text-center mb-8">
           <div className="flex items-center justify-center gap-3 mb-4">
-            <div className="h-12 w-12 rounded-xl bg-primary flex items-center justify-center">
-              <Shield className="h-6 w-6 text-primary-foreground" />
+            <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg">
+              <Shield className="h-6 w-6 text-white" />
             </div>
           </div>
-          <h1 className="text-3xl font-bold mb-2">Secure Document Access</h1>
-          <p className="text-muted-foreground">
+          <h1 className="text-3xl font-bold mb-2 bg-gradient-to-r from-slate-900 to-slate-600 dark:from-white dark:to-slate-300 bg-clip-text text-transparent">
+            Secure Document Access
+          </h1>
+          <p className="text-slate-600 dark:text-slate-400">
             Enter the PIN to decrypt and view your shared document
           </p>
         </div>
 
         {/* Main Card */}
-        <Card className="card-hover">
+        <Card className="backdrop-blur-sm bg-white/80 dark:bg-slate-900/80 border-slate-200/50 dark:border-slate-700/50 shadow-xl">
           <CardHeader className="space-y-1 pb-4">
             <CardTitle className="text-xl text-center flex items-center justify-center gap-2">
-              <Lock className="h-5 w-5" />
+              <Lock className="h-5 w-5 text-blue-600" />
               Enter PIN to Access File
             </CardTitle>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="pin" className="text-sm font-medium">
+                <Label htmlFor="pin" className="text-sm font-medium text-slate-700 dark:text-slate-300">
                   Security PIN
                 </Label>
                 <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
                   <Input
                     id="pin"
                     type="text"
                     value={pin}
                     onChange={e => setPin(e.target.value)}
                     placeholder="Enter 6-digit PIN"
-                    className="pl-10 text-center text-lg tracking-widest"
+                    className="pl-10 text-center text-lg tracking-widest border-slate-200 dark:border-slate-700 focus:border-blue-500 dark:focus:border-blue-400"
                     maxLength={6}
                     required
                     disabled={loading}
@@ -162,7 +164,7 @@ export default function SharePage() {
               <Button
                 type="submit"
                 disabled={loading}
-                className="w-full"
+                className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg"
                 size="lg"
               >
                 {loading ? (
@@ -197,11 +199,11 @@ export default function SharePage() {
                 
                 <div className="space-y-4">
                   <div>
-                    <h3 className="text-lg font-semibold mb-2 flex items-center gap-2">
+                    <h3 className="text-lg font-semibold mb-2 flex items-center gap-2 text-slate-800 dark:text-slate-200">
                       <FileText className="h-5 w-5" />
                       Document Preview
                     </h3>
-                    <div className="border rounded-lg overflow-hidden bg-muted/20">
+                    <div className="border border-slate-200 dark:border-slate-700 rounded-lg overflow-hidden bg-slate-50 dark:bg-slate-800">
                       <embed
                         src={downloadUrl}
                         type={decryptedBlob.type}
@@ -213,7 +215,7 @@ export default function SharePage() {
                   <div className="flex gap-3">
                     <Button
                       asChild
-                      className="flex-1"
+                      className="flex-1 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white shadow-lg"
                       size="lg"
                     >
                       <a
@@ -227,7 +229,7 @@ export default function SharePage() {
                     <Button
                       variant="outline"
                       onClick={copyLink}
-                      className="flex-1"
+                      className="flex-1 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
                       size="lg"
                     >
                       <Copy className="h-4 w-4 mr-2" />
@@ -242,7 +244,7 @@ export default function SharePage() {
 
         {/* Footer */}
         <div className="text-center mt-8">
-          <p className="text-xs text-muted-foreground">
+          <p className="text-xs text-slate-500 dark:text-slate-400">
             Secure • Encrypted • Private
           </p>
         </div>
